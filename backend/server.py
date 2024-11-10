@@ -164,12 +164,12 @@ async def text_to_image(object_name: str) -> JSONResponse:
         thread.start()
 
         # Add object to cache
-        CACHE_SERVER.post(obj)
+        url = CACHE_SERVER.post("/backend/output/" + object_name + ".obj", embedding)
     
         return JSONResponse(
             status_code=200,
             content={
-                "url": 
+                "url": url
             }
         )
     
