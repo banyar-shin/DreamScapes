@@ -62,7 +62,7 @@ async def query(payload: dict) -> bytes:
                 API_URL,
                 headers=headers,
                 json=payload,
-                timeout=5.0
+                timeout=120
             )
             response.raise_for_status()
             return response.content
@@ -162,6 +162,7 @@ async def text_to_image(object_name: str) -> JSONResponse:
         # Start a new thread for processing
         thread = threading.Thread(target=run_in_thread, args=(object_name,))
         thread.start()
+        thread.join()
 
         # Add object to cache
         url = CACHE_SERVER.post("/backend/output/" + object_name + ".obj", embedding)

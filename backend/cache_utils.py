@@ -59,7 +59,7 @@ class CacheServer:
         index.set_client(redis_client)
 
         # Connect and create the index
-        index.connect(f"redis://{redis_host}:{redis_port}")
+        index.connect(f"redis+cluster://{redis_host}:{redis_port}/0")
         index.create(overwrite=True)
 
         self.index = index
@@ -109,4 +109,3 @@ class CacheServer:
                 "url": url
         }]
         self.index.load(data)
-
