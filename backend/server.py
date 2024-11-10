@@ -14,6 +14,7 @@ from functools import lru_cache
 from pathlib import Path
 import threading
 import asyncio
+import cache_utils
 
 load_dotenv()
 
@@ -33,6 +34,7 @@ if not FLUX_API_KEY:
 headers = {"Authorization": f"Bearer {FLUX_API_KEY}"}
 OUTPUT_DIR = Path("output")
 OUTPUT_DIR.mkdir(exist_ok=True)
+CACHE_SERVER = cache_utils.create_index(os.getenv('REDIS_HOST', 'localhost'), os.getenv('REDIS_PORT', '6379'))
 
 class ModelService:
     @staticmethod
@@ -145,16 +147,29 @@ async def text_to_image(object_name: str) -> JSONResponse:
         if not object_name.strip():
             raise HTTPException(status_code=400, detail="Object name cannot be empty")
         
+        embedding = CACHE_SERVER.getEmbedding(object_name)
+
+        # Check if object exists in cache
+        cacheRes = CACHE_SERVER.get(embedding)
+        if cacheRes:
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "url": cacheRes,
+                }
+            )
+        
         # Start a new thread for processing
         thread = threading.Thread(target=run_in_thread, args=(object_name,))
         thread.start()
-        
+
+        # Add object to cache
+        CACHE_SERVER.post(obj)
+    
         return JSONResponse(
-            status_code=202,
+            status_code=200,
             content={
-                "message": "Image generation and 3D conversion started",
-                "object": object_name,
-                "status": "processing"
+                "url": 
             }
         )
     
